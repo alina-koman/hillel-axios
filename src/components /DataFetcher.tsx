@@ -1,11 +1,14 @@
 import {useEffect, useState} from "react"
 import type {UserInterface} from "../types/user.interface.ts"
 import {fetchData} from "../api/api.ts"
+import Loader from "./Loader.tsx"
+import ErrorText from "./ErrorText.tsx";
 
 const DataFetcher = () => {
   const [users, setUsers] = useState<UserInterface[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
+  const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     async function getUser() {
@@ -16,38 +19,39 @@ const DataFetcher = () => {
         const data = await fetchData()
         setUsers(data)
       } catch (error: unknown) {
-        if (error instanceof Error)
+        if (error instanceof Error) {
           setError(error)
+        }
       } finally {
         setLoading(false)
       }
     }
 
     getUser()
-  }, [])
+  }, [attempt])
 
   if (loading) {
-    return <div>
-      <h3>Loading...</h3>
-    </div>
+    return <Loader />
   }
 
   if (error) {
-    return <div>
-      <h3>Error!</h3>
-      <p>{error.message}</p>
-    </div>
+    return <ErrorText error={error} onRetry={() => setAttempt((value) => value + 1)} />
   }
 
   return (
-    <div>
+    <main>
+      <header>
+        <p>Directory</p>
+        <h1>Our users</h1>
+      </header>
       <ul>
         {users.map((user) =>
         <li key={user.id}>
-          {user.name} - {user.email}
+          <strong>{user.name}</strong>
+          <span>{user.email}</span>
         </li>)}
       </ul>
-    </div>
+    </main>
   )
 }
 
